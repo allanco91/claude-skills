@@ -60,6 +60,39 @@ Skill para aplicar as convenções pessoais do usuário sempre que ele escrever 
     setIsOpen(true);
   }
   ```
+- Quando houver várias condições comparando o mesmo campo/variável contra valores diferentes, dar preferência a `switch` em vez de uma cadeia de `if/else if` — fica mais legível. Exemplo:
+
+  Errado:
+  ```ts
+  function getStatusLabel(status: TOrderStatus) {
+    if (status === "pending") {
+      return "Pendente";
+    } else if (status === "paid") {
+      return "Pago";
+    } else if (status === "canceled") {
+      return "Cancelado";
+    } else {
+      return "Desconhecido";
+    }
+  }
+  ```
+
+  Certo:
+  ```ts
+  function getStatusLabel(status: TOrderStatus) {
+    switch (status) {
+      case "pending":
+        return "Pendente";
+      case "paid":
+        return "Pago";
+      case "canceled":
+        return "Cancelado";
+      default:
+        return "Desconhecido";
+    }
+  }
+  ```
+- O early return também se aplica dentro do `switch`: cada `case` deve dar `return` diretamente (como no exemplo acima), evitando `break` e variáveis intermediárias acumulando valor entre os `case`s
 
 ### Nomenclatura
 - Nomes de variáveis sempre claros e descritivos

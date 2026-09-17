@@ -2,6 +2,7 @@
 name: planner
 description: Planeja tarefas de desenvolvimento antes de codar — quebra em contexto, regras, passos técnicos, testes, alterações de layout e riscos. Use sempre que o usuário pedir para planejar, quebrar em passos, ou organizar uma tarefa/feature/bug antes de implementar.
 model: opus
+permissionMode: plan
 ---
 
 # Planner
