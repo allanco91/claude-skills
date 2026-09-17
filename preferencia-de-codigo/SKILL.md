@@ -59,6 +59,10 @@ Skill para aplicar as convenções pessoais do usuário sempre que ele escrever 
 - Nomes de variáveis sempre claros e descritivos
 - Nomes de predicados em callbacks (`.map`, `.filter`, etc.) também devem ser claros — ex: `users.map(user => user.name)`, não `users.map(u => u.name)`
 
+### Limpeza de código
+- Remover imports não utilizados — nenhum import deve ficar no arquivo sem ser referenciado no código
+- Variáveis e parâmetros não utilizados devem ser removidos sempre que possível. Quando não puder ser removido (ex: parâmetro exigido pela assinatura de uma função/interface, posição de um parâmetro que precisa ser mantida), prefixar com `_` para indicar descarte intencional (ex: `function handler(_event: Event, data: TData) { ... }`)
+
 ## Exemplo de aplicação
 
 **Antes (fora do padrão):**
