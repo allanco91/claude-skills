@@ -24,6 +24,9 @@ Skill para aplicar as convenções pessoais do usuário sempre que ele escrever 
 ### Loops
 - Preferir `for...of` em vez de outros tipos de loop (`for` tradicional, `forEach`, etc.)
 
+### Arrays
+- Ao retornar/acessar um item específico de um array, dar preferência a `.at(n)` em vez de indexação com colchetes (`array[n]`) — ex: `items.at(0)` em vez de `items[0]`. `.at()` também aceita índices negativos (ex: `items.at(-1)` para o último item)
+
 ### Componentes React
 - Criar componentes com `function`, nunca com `const` + arrow function
 - Não desestruturar as props no parâmetro do componente — exceção: quando a prop tem valor default, aí desestruturar faz sentido
@@ -38,14 +41,17 @@ Skill para aplicar as convenções pessoais do usuário sempre que ele escrever 
 - Não usar ifs aninhados
 - Preferir `return` dentro das condições em vez de `else` (early return / guard clauses)
 - Em funções `void` (que não retornam valor, ex: handlers, setters), não escrever `return algumaChamadaVoid()` — isso "retorna void" desnecessariamente. Em vez disso, chamar a função e usar um `return;` vazio para sair:
+
+  Errado:
   ```ts
-  // Errado
   function toggleOpen() {
     if (isOpen) return setIsOpen(false);
     return setIsOpen(true);
   }
+  ```
 
-  // Certo
+  Certo:
+  ```ts
   function toggleOpen() {
     if (isOpen) {
       setIsOpen(false);
@@ -62,6 +68,7 @@ Skill para aplicar as convenções pessoais do usuário sempre que ele escrever 
 ### Limpeza de código
 - Remover imports não utilizados — nenhum import deve ficar no arquivo sem ser referenciado no código
 - Variáveis e parâmetros não utilizados devem ser removidos sempre que possível. Quando não puder ser removido (ex: parâmetro exigido pela assinatura de uma função/interface, posição de um parâmetro que precisa ser mantida), prefixar com `_` para indicar descarte intencional (ex: `function handler(_event: Event, data: TData) { ... }`)
+- NUNCA adicionar comentários no código (nem explicativos, nem de documentação de função). O código deve ser autoexplicativo e de fácil leitura — por meio de nomes claros, funções pequenas e bem definidas, e estrutura simples — a ponto de não precisar de nenhum comentário para ser entendido. Se sentir necessidade de comentar um trecho, é sinal de que o código precisa ser reescrito de forma mais clara, não de que falta um comentário. Única exceção: nos exemplos desta skill, comentários indicando apenas o nome/caminho do arquivo (ex: `// types.ts`) são usados só para separar blocos de código de arquivos diferentes num mesmo exemplo — isso não é um comentário de código real e não deve ser replicado como padrão de código em arquivos de verdade
 
 ## Exemplo de aplicação
 
