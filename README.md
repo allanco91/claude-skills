@@ -16,3 +16,13 @@ Coleção pessoal de [skills](https://docs.claude.com/en/docs/agents-and-tools/a
 ## Como instalar
 
 Cada pasta contém um `SKILL.md`. Para usar no Claude.ai, Claude Code ou Cowork, siga as instruções de instalação de skills da [documentação oficial](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview).
+
+## Subagents (Claude Code)
+
+| Agent | Descrição |
+|---|---|
+| [`planner-agent`](./planner-agent) | Subagent de planejamento (`planner.md`) que aplica a skill `planejamento-de-tarefa` num modelo específico, separado do modelo usado para executar/codar. |
+
+### Como instalar
+
+Copie o `planner.md` para `~/.claude/agents/planner.md` (disponível em todos os projetos) ou `.claude/agents/planner.md` dentro de um projeto específico (sobrescreve o global só naquele projeto). Ajuste o campo `model` no frontmatter conforme o modelo desejado.
