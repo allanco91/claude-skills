@@ -12,6 +12,7 @@ Coleção pessoal de [skills](https://docs.claude.com/en/docs/agents-and-tools/a
 | [`documentacao-tecnica`](./documentacao-tecnica) | Gera documentação técnica focada em runbooks — procedimentos operacionais enxutos e diretos. |
 | [`planejamento-de-tarefa`](./planejamento-de-tarefa) | Quebra uma tarefa de desenvolvimento em plano técnico estruturado antes de codar: contexto, regras, passos, testes, layout e riscos. |
 | [`resumo-de-tarefa`](./resumo-de-tarefa) | Gera resumo do que foi corrigido/implementado numa tarefa, pronto para colar em ticket/PR — versão completa e resumida. |
+| [`qualidade-de-codigo`](./qualidade-de-codigo) | Analisa qualidade estrutural do código: SOLID, complexidade, acoplamento, duplicação, testes e performance. Roda automaticamente após o código ser escrito, com nota geral + detalhamento e oferece aplicar as melhorias. |
 
 ## Como instalar
 
