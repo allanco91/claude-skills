@@ -32,6 +32,65 @@ Skill para aplicar as convenções pessoais do usuário sempre que ele escrever 
 - Não desestruturar as props no parâmetro do componente — exceção: quando a prop tem valor default, aí desestruturar faz sentido
 - Separar toda lógica de estado em hooks customizados, mantendo o componente com um render limpo (componente só cuida de apresentação)
 - Nunca usar inline style — sob nenhuma circunstância
+- Quando o estado é um objeto mais complexo (múltiplos campos relacionados que mudam juntos, ou transições de estado com lógica própria), dar preferência a `useReducer` em vez de múltiplos `useState` separados. Para estado simples (um valor isolado, booleano, string, número), `useState` continua sendo a escolha certa — a regra vale especificamente quando os campos formam um objeto coeso e há lógica de transição entre eles. Exemplo:
+
+  Errado (múltiplos estados relacionados):
+  ```ts
+  function useCheckoutForm() {
+    const [step, setStep] = useState(1);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    function goToNextStep() {
+      setStep(step + 1);
+      setError(null);
+    }
+
+    return { step, isSubmitting, error, goToNextStep };
+  }
+  ```
+
+  Certo (estado complexo consolidado em useReducer):
+  ```ts
+  type TCheckoutState = {
+    step: number;
+    isSubmitting: boolean;
+    error: string | null;
+  };
+
+  type TCheckoutAction =
+    | { type: "next_step" }
+    | { type: "submit_start" }
+    | { type: "submit_error"; error: string };
+
+  function checkoutReducer(state: TCheckoutState, action: TCheckoutAction): TCheckoutState {
+    switch (action.type) {
+      case "next_step":
+        return { ...state, step: state.step + 1, error: null };
+      case "submit_start":
+        return { ...state, isSubmitting: true };
+      case "submit_error":
+        return { ...state, isSubmitting: false, error: action.error };
+      default:
+        throw new Error(`Unsupported action: ${JSON.stringify(action)}`);
+    }
+  }
+
+  function useCheckoutForm() {
+    const [state, dispatch] = useReducer(checkoutReducer, {
+      step: 1,
+      isSubmitting: false,
+      error: null,
+    });
+
+    function goToNextStep() {
+      dispatch({ type: "next_step" });
+    }
+
+    return { ...state, goToNextStep };
+  }
+  ```
+- No `default` do `switch` dentro do reducer, nunca retornar o `state` silenciosamente — lançar um erro indicando que a action não é suportada (como no exemplo acima). Isso torna bugs visíveis em vez de mascará-los com um estado que não muda sem explicação. A mensagem do erro deve ser em inglês (ex: `Unsupported action: ...`) — mensagens de erro no código, de forma geral, ficam em inglês
 
 ### Funções
 - Preferir declarar funções com `function` em vez de `const arrow function`
@@ -93,6 +152,34 @@ Skill para aplicar as convenções pessoais do usuário sempre que ele escrever 
   }
   ```
 - O early return também se aplica dentro do `switch`: cada `case` deve dar `return` diretamente (como no exemplo acima), evitando `break` e variáveis intermediárias acumulando valor entre os `case`s
+
+### Assincronismo
+- SEMPRE usar `async/await` para métodos assíncronos, nunca encadeamento de `.then()`/`.catch()` — deixa o código mais legível e linear. Erros são tratados com `try/catch`. Exemplo:
+
+  Errado:
+  ```ts
+  function fetchUser(id: string) {
+    return api.get(`/users/${id}`)
+      .then((response) => response.data)
+      .catch((error) => {
+        logger.error(error);
+        throw error;
+      });
+  }
+  ```
+
+  Certo:
+  ```ts
+  async function fetchUser(id: string) {
+    try {
+      const response = await api.get(`/users/${id}`);
+      return response.data;
+    } catch (error) {
+      logger.error(error);
+      throw error;
+    }
+  }
+  ```
 
 ### Nomenclatura
 - Nomes de variáveis sempre claros e descritivos
