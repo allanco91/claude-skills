@@ -1,6 +1,6 @@
 ---
 name: preferencia-de-codigo
-description: Aplica as convenções de estilo pessoais do usuário para código TypeScript, React e Node.js — tanto ao gerar código novo quanto ao revisar/editar código existente. Use sempre que o usuário pedir para escrever, criar, refatorar, ajustar ou revisar código em TS, React ou Node, mesmo que ele não mencione "estilo" ou "convenção" explicitamente. Cobre tipagem, estrutura de componentes, hooks, controle de fluxo e nomenclatura.
+description: SEMPRE aplique esta skill ao escrever, gerar, terminar de escrever, revisar, refatorar ou editar qualquer código em TypeScript, React ou Node.js — não é opcional, é o padrão obrigatório para qualquer código nessas stacks, mesmo que o usuário não mencione "estilo", "convenção" ou peça explicitamente para seguir um padrão. Aplique durante a escrita E faça uma checagem final antes de entregar o código, confirmando que todas as convenções foram seguidas. Cobre tipagem, estrutura de componentes, hooks, controle de fluxo, nomenclatura, constantes e assincronismo.
 ---
 
 # Preferência de Código (TS + React + Node)
@@ -12,6 +12,11 @@ Skill para aplicar as convenções pessoais do usuário sempre que ele escrever 
 - Ao gerar código novo em TS/React/Node para o usuário
 - Ao revisar, refatorar ou editar código existente nessas stacks
 - Vale tanto para componentes React quanto para lógica de backend em Node
+- Aplicar automaticamente, sem esperar o usuário pedir — este é o padrão de código dele, não uma opção pontual
+
+## Checagem final obrigatória
+
+Antes de considerar qualquer trecho de código pronto para entrega (seja escrito do zero, seja uma edição), revisar o código contra todas as convenções desta skill, uma a uma. Se algo não seguir o padrão, corrigir antes de entregar — não apontar a violação e deixar como está, a menos que o usuário tenha pedido especificamente para não aplicar a skill.
 
 ## Convenções
 
@@ -184,6 +189,34 @@ Skill para aplicar as convenções pessoais do usuário sempre que ele escrever 
 ### Nomenclatura
 - Nomes de variáveis sempre claros e descritivos
 - Nomes de predicados em callbacks (`.map`, `.filter`, etc.) também devem ser claros — ex: `users.map(user => user.name)`, não `users.map(u => u.name)`
+
+### Constantes
+- Nunca usar "magic numbers" (ou strings) — valores numéricos ou de texto soltos no meio da lógica, sem explicação do que representam. Extrair para uma constante com nome breve e explicativo, em `UPPER_SNAKE_CASE`. Exemplo:
+
+  Errado:
+  ```ts
+  function applyDiscount(price: number) {
+    if (price > 500) {
+      return price * 0.9;
+    }
+    return price;
+  }
+  ```
+
+  Certo:
+  ```ts
+  const FREE_SHIPPING_MIN_PRICE = 500;
+  const DISCOUNT_RATE = 0.9;
+
+  function applyDiscount(price: number) {
+    if (price > FREE_SHIPPING_MIN_PRICE) {
+      return price * DISCOUNT_RATE;
+    }
+    return price;
+  }
+  ```
+- Constantes usadas em mais de um arquivo devem ficar centralizadas num arquivo próprio (ex: `constants.ts`), seguindo a mesma lógica de organização usada para `types.ts`. Constantes usadas só dentro de um único arquivo podem ficar declaradas no topo dele
+- Valores como `0`, `1` ou `-1` usados em contextos óbvios (ex: incremento de loop, índice inicial) não precisam virar constante — a regra vale para valores cujo significado não é evidente pelo contexto
 
 ### Limpeza de código
 - Remover imports não utilizados — nenhum import deve ficar no arquivo sem ser referenciado no código
