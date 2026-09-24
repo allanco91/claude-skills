@@ -1,290 +1,87 @@
 ---
-name: preferencia-de-codigo
-description: SEMPRE aplique esta skill ao escrever, gerar, terminar de escrever, revisar, refatorar ou editar qualquer código em TypeScript, React ou Node.js — não é opcional, é o padrão obrigatório para qualquer código nessas stacks, mesmo que o usuário não mencione "estilo", "convenção" ou peça explicitamente para seguir um padrão. Aplique durante a escrita E faça uma checagem final antes de entregar o código, confirmando que todas as convenções foram seguidas. Cobre tipagem, estrutura de componentes, hooks, controle de fluxo, nomenclatura, constantes e assincronismo.
+name: qualidade-de-codigo
+description: "SEMPRE aplique esta skill ao terminar de escrever, gerar ou editar qualquer código de tamanho não trivial — analisa qualidade estrutural do código: princípios SOLID, complexidade ciclomática, acoplamento, duplicação/reaproveitamento, cobertura e qualidade de testes, e performance/escalabilidade. É complementar às skills de code-review (revisão de bugs/segurança/legibilidade) e preferencia-de-codigo (convenções de estilo) — esta skill foca em qualidade estrutural e de design, não em estilo ou bugs pontuais. Roda automaticamente, sem precisar ser pedida, sempre que uma quantidade relevante de código for produzida ou alterada."
 ---
 
-# Preferência de Código (TS + React + Node)
+# Qualidade de Código
 
-Skill para aplicar as convenções pessoais do usuário sempre que ele escrever ou revisar código em TypeScript, React ou Node.js.
+Skill para avaliar a qualidade estrutural do código produzido ou alterado — complementar ao `code-review` (bugs/segurança/legibilidade) e à `preferencia-de-codigo` (convenções de estilo). Esta skill olha para o design do código: princípios, complexidade, duplicação, testes e performance.
 
 ## Quando usar
 
-- Ao gerar código novo em TS/React/Node para o usuário
-- Ao revisar, refatorar ou editar código existente nessas stacks
-- Vale tanto para componentes React quanto para lógica de backend em Node
-- Aplicar automaticamente, sem esperar o usuário pedir — este é o padrão de código dele, não uma opção pontual
+- Automaticamente, ao terminar de escrever, gerar ou editar uma quantidade relevante de código (uma função isolada e trivial não precisa passar por essa análise completa — funções/módulos com lógica não trivial, sim)
+- Quando o usuário pedir explicitamente uma análise de qualidade de código
 
-## Checagem final obrigatória
+## Como executar: delegar quando possível
 
-Antes de considerar qualquer trecho de código pronto para entrega (seja escrito do zero, seja uma edição), revisar o código contra todas as convenções desta skill, uma a uma. Se algo não seguir o padrão, corrigir antes de entregar — não apontar a violação e deixar como está, a menos que o usuário tenha pedido especificamente para não aplicar a skill.
+Se houver um subagent `quality-reviewer` disponível (ambiente Claude Code, com suporte a subagents), delegar a análise a ele em vez de fazer inline — o `quality-reviewer` nunca viu a implementação sendo escrita, o que dá uma segunda opinião sem o viés de quem acabou de codar. Passar a ele os arquivos/trechos relevantes e aguardar o relatório.
 
-## Convenções
+Se não houver subagents disponíveis no ambiente (ex: Claude.ai, Cowork), aplicar a análise abaixo diretamente, inline, como fallback.
 
-### Tipagem
-- Preferir `type` em vez de `interface`
-- Todo `type` deve começar com a letra `T` (ex: `TUserProps`, `TApiResponse`)
-- Types devem ficar em um arquivo específico dedicado a eles (ex: `types.ts`), não misturados com a lógica
-- NUNCA usar `any`. Se não houver como tipar corretamente, usar `unknown` (e tratar/validar o tipo antes de usar o valor)
+## Categorias analisadas
 
-### Loops
-- Preferir `for...of` em vez de outros tipos de loop (`for` tradicional, `forEach`, etc.)
+### 1. Princípios (SOLID / complexidade / acoplamento)
+- **Responsabilidade única**: a função/classe/módulo faz uma coisa só? Se uma função tem múltiplas responsabilidades misturadas, sinalizar
+- **Complexidade ciclomática**: contar caminhos de execução (ifs, loops, switches, operadores lógicos combinados). Funções com muitos caminhos (aproximadamente mais de 8-10) são candidatas a quebra em funções menores
+- **Acoplamento**: o código depende de detalhes internos de outros módulos, em vez de depender de interfaces/contratos? Módulos muito amarrados uns aos outros dificultam mudança isolada
+- **Profundidade de aninhamento**: mesmo com early return (já coberto pela skill de preferência de código), verificar se a lógica em si não ficou excessivamente ramificada
 
-### Arrays
-- Ao retornar/acessar um item específico de um array, dar preferência a `.at(n)` em vez de indexação com colchetes (`array[n]`) — ex: `items.at(0)` em vez de `items[0]`. `.at()` também aceita índices negativos (ex: `items.at(-1)` para o último item)
+### 2. Duplicação e reaproveitamento
+- Trechos de lógica repetidos (mesmo que com pequenas variações) que poderiam virar uma função/hook/utilitário compartilhado
+- Padrões copiados e colados entre componentes/módulos que indicam abstração faltando
+- Cuidado para não sugerir abstração prematura: duplicação de 2 ocorrências simples nem sempre justifica extração — julgar pelo contexto
 
-### Componentes React
-- Criar componentes com `function`, nunca com `const` + arrow function
-- Não desestruturar as props no parâmetro do componente — exceção: quando a prop tem valor default, aí desestruturar faz sentido
-- Separar toda lógica de estado em hooks customizados, mantendo o componente com um render limpo (componente só cuida de apresentação)
-- Nunca usar inline style — sob nenhuma circunstância
-- Quando o estado é um objeto mais complexo (múltiplos campos relacionados que mudam juntos, ou transições de estado com lógica própria), dar preferência a `useReducer` em vez de múltiplos `useState` separados. Para estado simples (um valor isolado, booleano, string, número), `useState` continua sendo a escolha certa — a regra vale especificamente quando os campos formam um objeto coeso e há lógica de transição entre eles. Exemplo:
+### 3. Testes
+- O código novo/alterado tem testes cobrindo o caminho principal?
+- Casos de borda relevantes (valores nulos/vazios, limites, erros) estão cobertos?
+- Os testes existentes testam comportamento (o quê) e não implementação (como) — testes muito acoplados a detalhes internos quebram fácil em refatorações
+- Se não houver testes e o código for não trivial, sinalizar a ausência como ponto de atenção
 
-  Errado (múltiplos estados relacionados):
-  ```ts
-  function useCheckoutForm() {
-    const [step, setStep] = useState(1);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+### 4. Performance e escalabilidade
+- Operações custosas dentro de loops (ex: chamada a API, query a banco, cálculo pesado repetido sem necessidade)
+- Estruturas de dados inadequadas para o volume esperado (ex: busca linear onde um `Map`/`Set` resolveria em O(1))
+- Em React especificamente: re-renders desnecessários, cálculos pesados sem memoização (`useMemo`/`useCallback`) quando justificado, listas grandes sem virtualização
+- Não otimizar prematuramente: sinalizar apenas gargalos reais ou prováveis dado o contexto (volume de dados, frequência de chamada), não qualquer possível micro-otimização
 
-    function goToNextStep() {
-      setStep(step + 1);
-      setError(null);
-    }
+## Formato de saída
 
-    return { step, isSubmitting, error, goToNextStep };
-  }
-  ```
+Sempre duas partes: uma nota/classificação geral no topo, seguida do detalhamento por categoria.
 
-  Certo (estado complexo consolidado em useReducer):
-  ```ts
-  type TCheckoutState = {
-    step: number;
-    isSubmitting: boolean;
-    error: string | null;
-  };
+```markdown
+## Qualidade de código: [Boa / Atenção / Crítica]
 
-  type TCheckoutAction =
-    | { type: "next_step" }
-    | { type: "submit_start" }
-    | { type: "submit_error"; error: string };
+[1-2 frases resumindo o veredito geral]
 
-  function checkoutReducer(state: TCheckoutState, action: TCheckoutAction): TCheckoutState {
-    switch (action.type) {
-      case "next_step":
-        return { ...state, step: state.step + 1, error: null };
-      case "submit_start":
-        return { ...state, isSubmitting: true };
-      case "submit_error":
-        return { ...state, isSubmitting: false, error: action.error };
-      default:
-        throw new Error(`Unsupported action: ${JSON.stringify(action)}`);
-    }
-  }
+### Princípios (SOLID / complexidade / acoplamento)
+- [achado] — [por quê importa] — [sugestão]
 
-  function useCheckoutForm() {
-    const [state, dispatch] = useReducer(checkoutReducer, {
-      step: 1,
-      isSubmitting: false,
-      error: null,
-    });
+### Duplicação e reaproveitamento
+- [achado] — [sugestão]
 
-    function goToNextStep() {
-      dispatch({ type: "next_step" });
-    }
+### Testes
+- [achado] — [o que falta cobrir]
 
-    return { ...state, goToNextStep };
-  }
-  ```
-- No `default` do `switch` dentro do reducer, nunca retornar o `state` silenciosamente — lançar um erro indicando que a action não é suportada (como no exemplo acima). Isso torna bugs visíveis em vez de mascará-los com um estado que não muda sem explicação. A mensagem do erro deve ser em inglês (ex: `Unsupported action: ...`) — mensagens de erro no código, de forma geral, ficam em inglês
-
-### Funções
-- Preferir declarar funções com `function` em vez de `const arrow function`
-
-### Controle de fluxo
-- Não usar if ternário, exceto quando for muito simples e não prejudicar a leitura
-- Não usar ifs aninhados
-- Preferir `return` dentro das condições em vez de `else` (early return / guard clauses)
-- Em funções `void` (que não retornam valor, ex: handlers, setters), não escrever `return algumaChamadaVoid()` — isso "retorna void" desnecessariamente. Em vez disso, chamar a função e usar um `return;` vazio para sair:
-
-  Errado:
-  ```ts
-  function toggleOpen() {
-    if (isOpen) return setIsOpen(false);
-    return setIsOpen(true);
-  }
-  ```
-
-  Certo:
-  ```ts
-  function toggleOpen() {
-    if (isOpen) {
-      setIsOpen(false);
-      return;
-    }
-    setIsOpen(true);
-  }
-  ```
-- Quando houver várias condições comparando o mesmo campo/variável contra valores diferentes, dar preferência a `switch` em vez de uma cadeia de `if/else if` — fica mais legível. Exemplo:
-
-  Errado:
-  ```ts
-  function getStatusLabel(status: TOrderStatus) {
-    if (status === "pending") {
-      return "Pendente";
-    } else if (status === "paid") {
-      return "Pago";
-    } else if (status === "canceled") {
-      return "Cancelado";
-    } else {
-      return "Desconhecido";
-    }
-  }
-  ```
-
-  Certo:
-  ```ts
-  function getStatusLabel(status: TOrderStatus) {
-    switch (status) {
-      case "pending":
-        return "Pendente";
-      case "paid":
-        return "Pago";
-      case "canceled":
-        return "Cancelado";
-      default:
-        return "Desconhecido";
-    }
-  }
-  ```
-- O early return também se aplica dentro do `switch`: cada `case` deve dar `return` diretamente (como no exemplo acima), evitando `break` e variáveis intermediárias acumulando valor entre os `case`s
-
-### Assincronismo
-- SEMPRE usar `async/await` para métodos assíncronos, nunca encadeamento de `.then()`/`.catch()` — deixa o código mais legível e linear. Erros são tratados com `try/catch`. Exemplo:
-
-  Errado:
-  ```ts
-  function fetchUser(id: string) {
-    return api.get(`/users/${id}`)
-      .then((response) => response.data)
-      .catch((error) => {
-        logger.error(error);
-        throw error;
-      });
-  }
-  ```
-
-  Certo:
-  ```ts
-  async function fetchUser(id: string) {
-    try {
-      const response = await api.get(`/users/${id}`);
-      return response.data;
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
-  ```
-
-### Nomenclatura
-- Nomes de variáveis sempre claros e descritivos
-- Nomes de predicados em callbacks (`.map`, `.filter`, etc.) também devem ser claros — ex: `users.map(user => user.name)`, não `users.map(u => u.name)`
-
-### Constantes
-- Nunca usar "magic numbers" (ou strings) — valores numéricos ou de texto soltos no meio da lógica, sem explicação do que representam. Extrair para uma constante com nome breve e explicativo, em `UPPER_SNAKE_CASE`. Exemplo:
-
-  Errado:
-  ```ts
-  function applyDiscount(price: number) {
-    if (price > 500) {
-      return price * 0.9;
-    }
-    return price;
-  }
-  ```
-
-  Certo:
-  ```ts
-  const FREE_SHIPPING_MIN_PRICE = 500;
-  const DISCOUNT_RATE = 0.9;
-
-  function applyDiscount(price: number) {
-    if (price > FREE_SHIPPING_MIN_PRICE) {
-      return price * DISCOUNT_RATE;
-    }
-    return price;
-  }
-  ```
-- Constantes usadas em mais de um arquivo devem ficar centralizadas num arquivo próprio (ex: `constants.ts`), seguindo a mesma lógica de organização usada para `types.ts`. Constantes usadas só dentro de um único arquivo podem ficar declaradas no topo dele
-- Valores como `0`, `1` ou `-1` usados em contextos óbvios (ex: incremento de loop, índice inicial) não precisam virar constante — a regra vale para valores cujo significado não é evidente pelo contexto
-
-### Limpeza de código
-- Remover imports não utilizados — nenhum import deve ficar no arquivo sem ser referenciado no código
-- Variáveis e parâmetros não utilizados devem ser removidos sempre que possível. Quando não puder ser removido (ex: parâmetro exigido pela assinatura de uma função/interface, posição de um parâmetro que precisa ser mantida), prefixar com `_` para indicar descarte intencional (ex: `function handler(_event: Event, data: TData) { ... }`)
-- NUNCA adicionar comentários no código (nem explicativos, nem de documentação de função). O código deve ser autoexplicativo e de fácil leitura — por meio de nomes claros, funções pequenas e bem definidas, e estrutura simples — a ponto de não precisar de nenhum comentário para ser entendido. Se sentir necessidade de comentar um trecho, é sinal de que o código precisa ser reescrito de forma mais clara, não de que falta um comentário. Única exceção: nos exemplos desta skill, comentários indicando apenas o nome/caminho do arquivo (ex: `// types.ts`) são usados só para separar blocos de código de arquivos diferentes num mesmo exemplo — isso não é um comentário de código real e não deve ser replicado como padrão de código em arquivos de verdade
-
-## Exemplo de aplicação
-
-**Antes (fora do padrão):**
-```tsx
-const UserCard = ({ name, age, theme = "light" }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleClick = () => {
-    if (isOpen) {
-      setIsOpen(false);
-    } else {
-      setIsOpen(true);
-    }
-  };
-
-  return (
-    <div style={{ padding: "8px" }} onClick={handleClick}>
-      {name} - {isOpen ? "aberto" : "fechado"}
-    </div>
-  );
-};
+### Performance e escalabilidade
+- [achado] — [impacto esperado] — [sugestão]
 ```
 
-**Depois (seguindo a preferência do usuário):**
-```tsx
-// types.ts
-export type TUserCardProps = {
-  name: string;
-  age: number;
-  theme?: "light" | "dark";
-};
+- A classificação geral (`Boa / Atenção / Crítica`) reflete a severidade combinada dos achados: **Crítica** se algo compromete corretude/performance de forma significativa; **Atenção** se há melhorias estruturais relevantes mas nada urgente; **Boa** se o código está sólido, com no máximo pontos menores
+- Omitir uma categoria inteira se não houver achado relevante nela — não preencher com "nada a apontar"
+- Se nenhuma categoria tiver achados, retornar só a nota geral "Boa" com uma frase curta, sem a estrutura completa
 
-// useUserCardState.ts
-function useUserCardState() {
-  const [isOpen, setIsOpen] = useState(false);
+## Após a análise: perguntar quais melhorias aplicar
 
-  function toggleOpen() {
-    if (isOpen) {
-      setIsOpen(false);
-      return;
-    }
-    setIsOpen(true);
-  }
+Se a classificação for **Atenção** ou **Crítica** (há achados de melhoria), não aplicar nada automaticamente e não perguntar de forma genérica ("quer que eu aplique?"). Em vez disso, listar os achados de forma numerada/identificável e perguntar quais o usuário quer que sejam aplicados — já que mudanças estruturais (extrair função, paralelizar chamadas, adicionar testes) têm custo e risco diferentes entre si, e o usuário pode querer aplicar só parte delas. Exemplo de como encerrar:
 
-  return { isOpen, toggleOpen };
-}
+> Quais dessas melhorias você quer que eu aplique? (pode escolher mais de uma, ou "todas")
+> 1. Extrair a lógica de busca de dados do pedido para uma função separada
+> 2. Paralelizar as chamadas de API com `Promise.all`
+> 3. Adicionar testes para os casos citados
 
-// UserCard.tsx
-function UserCard(props: TUserCardProps) {
-  const { theme = "light" } = props;
-  const { isOpen, toggleOpen } = useUserCardState();
+Aplicar apenas os itens que o usuário selecionar, seguindo também as convenções da skill `preferencia-de-codigo`. Se a classificação for **Boa**, não é necessário perguntar nada — só informar o veredito.
 
-  return (
-    <div className="user-card" onClick={toggleOpen}>
-      {props.name} - {isOpen ? "aberto" : "fechado"}
-    </div>
-  );
-}
-```
+## Diferença em relação às outras skills
 
-Note: as props só foram desestruturadas para `theme`, que tem valor default. `name` e `isOpen`/`toggleOpen` (que vêm do hook) permanecem acessados via `props.` ou retorno nomeado do hook.
-
-## Ao revisar código existente
-
-Ao encontrar código que viola essas convenções, apontar a violação específica e sugerir a correção seguindo o padrão acima — não é necessário reescrever o arquivo inteiro a menos que o usuário peça.
+- **`code-review`**: revisa bugs, segurança, legibilidade e testes de forma mais ampla, geralmente sob pedido explícito de revisão de um diff/PR
+- **`preferencia-de-codigo`**: aplica convenções de estilo pessoais (nomenclatura, tipagem, estrutura sintática) — é sobre "como o código é escrito"
+- **`qualidade-de-codigo`** (esta skill): é sobre "como o código é desenhado" — estrutura, responsabilidades, testes e performance. Roda automaticamente após a preferência de código já ter sido aplicada, como uma segunda camada de análise

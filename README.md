@@ -12,7 +12,7 @@ Coleção pessoal de [skills](https://docs.claude.com/en/docs/agents-and-tools/a
 | [`documentacao-tecnica`](./documentacao-tecnica) | Gera documentação técnica focada em runbooks — procedimentos operacionais enxutos e diretos. |
 | [`planejamento-de-tarefa`](./planejamento-de-tarefa) | Quebra uma tarefa de desenvolvimento em plano técnico estruturado antes de codar: contexto, regras, passos, testes, layout e riscos. |
 | [`resumo-de-tarefa`](./resumo-de-tarefa) | Gera resumo do que foi corrigido/implementado numa tarefa, pronto para colar em ticket/PR — versão completa e resumida. |
-| [`qualidade-de-codigo`](./qualidade-de-codigo) | Analisa qualidade estrutural do código: SOLID, complexidade, acoplamento, duplicação, testes e performance. Roda automaticamente após o código ser escrito, com nota geral + detalhamento e oferece aplicar as melhorias. |
+| [`qualidade-de-codigo`](./qualidade-de-codigo) | Analisa qualidade estrutural do código: SOLID, complexidade, acoplamento, duplicação, testes e performance. Roda automaticamente após o código ser escrito, com nota geral + detalhamento e pergunta quais melhorias aplicar. No Claude Code, delega para o subagent `quality-reviewer`. |
 
 ## Como instalar
 
@@ -22,8 +22,9 @@ Cada pasta contém um `SKILL.md`. Para usar no Claude.ai, Claude Code ou Cowork,
 
 | Agent | Descrição |
 |---|---|
-| [`planner-agent`](./planner-agent) | Subagent de planejamento (`planner.md`) que aplica a skill `planejamento-de-tarefa` num modelo específico, separado do modelo usado para executar/codar. |
+| [`planner-agent`](./planner-agent) | Subagent de planejamento (`planner.md`) que aplica a skill `planejamento-de-tarefa` num modelo específico, separado do modelo usado para executar/codar. Roda em `permissionMode: plan`, sem editar arquivos. |
+| [`quality-reviewer-agent`](./quality-reviewer-agent) | Subagent de revisão de qualidade (`quality-reviewer.md`) que aplica a skill `qualidade-de-codigo` com olhos frescos — nunca viu a implementação sendo escrita, evitando o viés de quem acabou de codar. Roda em `permissionMode: plan`, sem editar arquivos; a aplicação das melhorias fica com a sessão principal. |
 
 ### Como instalar
 
-Copie o `planner.md` para `~/.claude/agents/planner.md` (disponível em todos os projetos) ou `.claude/agents/planner.md` dentro de um projeto específico (sobrescreve o global só naquele projeto). Ajuste o campo `model` no frontmatter conforme o modelo desejado.
+Copie o `.md` do agent desejado para `~/.claude/agents/` (disponível em todos os projetos) ou `.claude/agents/` dentro de um projeto específico (sobrescreve o global só naquele projeto). Ajuste o campo `model` no frontmatter conforme o modelo desejado.
